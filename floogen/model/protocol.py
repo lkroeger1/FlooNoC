@@ -80,7 +80,7 @@ class AXI4(ProtocolDesc):
         
         # When the FlooNoC Width is configured beyond the 1024 bit limit of the AXI4 standard, 
         # the "size" field of the AXI4 protocol needs to be extended to 4 bit, the cluster_tile then automatically uses an adapter to connect to the NoC.
-        # An adapter is needed at every endpoint of the NoC then, so we keep the size at 3 bit or less to preserve the AXI4 compliance without the adapter if we are <= 1024.
+        # An adapter is needed at every endpoint of the NoC then, so we keep the size at 3 bit to preserve the AXI4 compliance without the adapter if we are <= 1024.
 
         if self.data_width > 1024:
             string += f"`FLOO_WIDE_AXI_TYPEDEF_ALL_CT({name_t}, \

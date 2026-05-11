@@ -42,7 +42,9 @@ module floo_axi_dw_upsizer #(
     parameter type axi_mst_req_t               = logic, // AXI Request Type for mst ports
     parameter type axi_mst_resp_t              = logic, // AXI Response Type for mst ports
     parameter type axi_slv_req_t               = logic, // AXI Request Type for slv ports
-    parameter type axi_slv_resp_t              = logic  // AXI Response Type for slv ports
+    parameter type axi_slv_resp_t              = logic, // AXI Response Type for slv ports
+    parameter bit Use4BitSize = 1'b1 // See if the AXI size field needs to be increased to 4 bits to support the maximum data width
+
   ) (
     input  logic          clk_i,
     input  logic          rst_ni,
@@ -83,7 +85,8 @@ module floo_axi_dw_upsizer #(
 
   //New size width
 
-  typedef logic [3:0] ext_aw_ar_size_t;
+  localparam int unsigned SizeWidth = Use4BitSize ? 4 : 3;
+  typedef logic [SizeWidth-1:0] ext_aw_ar_size_t;
 
   // ID width
   typedef logic [AxiIdWidth-1:0] id_t;

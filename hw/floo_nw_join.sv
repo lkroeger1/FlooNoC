@@ -65,6 +65,8 @@ module floo_nw_join #(
   parameter int unsigned AxiWideMstPortMaxUniqIds     = 2**AxiIdConvWidth,
   /// Maximum number of in-flight transactions with the same ID at the wide master port.
   parameter int unsigned AxiWideMstPortMaxTxnsPerId   = AxiWideMaxTxns,
+  /// Parameter to increase the size bit field of axi to 4 bit
+  parameter bit Use4BitSize                        = 1'b1,
   /// Attach a Atop RISC-V adapter in the end to resolve atomic operations
   parameter bit EnAtopAdapter                         = 1'b1,
   /// Use user signals for the ATOP adapter
@@ -121,6 +123,8 @@ module floo_nw_join #(
   axi_wide_req_t axi_wide_req_filter_atop;
   axi_wide_rsp_t axi_wide_rsp_filter_atop;
 
+
+  // TODO: Confirm these filters are really axi size agnostic (especially stream register)
   if (FilterNarrowAtops) begin : gen_narrow_atop_filter
     axi_atop_filter #(
       .AxiIdWidth       ( AxiCfgN.InIdWidth ),
@@ -197,7 +201,7 @@ module floo_nw_join #(
     .mst_resp_i ( axi_narrow_rsp_iw_conv )
   );
 
-  axi_iw_converter #(
+  floo_axi_iw_converter #(
     .AxiSlvPortIdWidth        ( AxiCfgW.InIdWidth ),
     .AxiMstPortIdWidth        ( AxiIdConvWidth    ),
     .AxiSlvPortMaxUniqIds     ( AxiWideSlvPortMaxUniqIds   ),
@@ -212,7 +216,7 @@ module floo_nw_join #(
     .slv_resp_t               ( axi_wide_rsp_t ),
     .mst_req_t                ( axi_wide_iw_conv_req_t ),
     .mst_resp_t               ( axi_wide_iw_conv_rsp_t )
-  ) i_axi_wide_iw_converter (
+  ) i_floo_axi_wide_iw_converter (
     .clk_i,
     .rst_ni,
     .slv_req_i  ( axi_wide_req_filter_atop ),
@@ -261,7 +265,7 @@ module floo_nw_join #(
     .mst_resp_i ( axi_narrow_rsp_dw_conv )
   );
 
-  axi_dw_converter #(
+  floo_axi_dw_converter #(
     .AxiMaxReads          ( AxiWideMaxReadTxns   ),
     .AxiSlvPortDataWidth  ( AxiCfgW.DataWidth    ),
     .AxiMstPortDataWidth  ( AxiCfgJoin.DataWidth ),
@@ -277,8 +281,9 @@ module floo_nw_join #(
     .axi_mst_req_t        ( axi_wide_dw_conv_req_t ),
     .axi_mst_resp_t       ( axi_wide_dw_conv_rsp_t ),
     .axi_slv_req_t        ( axi_wide_iw_conv_req_t ),
-    .axi_slv_resp_t       ( axi_wide_iw_conv_rsp_t )
-  ) i_axi_wide_dw_converter (
+    .axi_slv_resp_t       ( axi_wide_iw_conv_rsp_t ),
+    .Use4BitSize          ( Use4BitSize )
+  ) i_floo_axi_wide_dw_converter (
     .clk_i,
     .rst_ni,
     .slv_req_i  ( axi_wide_req_iw_conv ),

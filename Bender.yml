@@ -27,10 +27,12 @@ export_include_dirs:
 sources:
   # Level 0
   - hw/floo_pkg.sv
+  - hw/axi_pkg_ext.sv
   # Level 1
   - hw/floo_axi_dw_upsizer.sv
   - hw/floo_axi_dw_downsizer.sv
   - hw/floo_axi_dw_converter.sv
+  - hw/floo_axi_iw_converter.sv
   - hw/floo_cut.sv
   - hw/floo_fifo.sv
   - hw/floo_cdc.sv

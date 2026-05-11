@@ -77,6 +77,9 @@ module floo_wide_ext_adapter
   /// this small but large enough to cover the DMA's pipeline depth.
   localparam int unsigned AxiMaxReads = 8;
 
+  // Set if 4 bit size field is used
+  localparam bit Use4BitSize = 1;
+
   // ---------------------------------------------------------------------------
   // Internal type declarations
   //
@@ -300,7 +303,8 @@ module floo_wide_ext_adapter
     .axi_slv_req_t        ( axi_mgr_slv_req_t      ),
     .axi_slv_resp_t       ( axi_mgr_slv_resp_t     ),
     .axi_mst_req_t        ( axi_mgr_mst_req_t      ),
-    .axi_mst_resp_t       ( axi_mgr_mst_resp_t     )
+    .axi_mst_resp_t       ( axi_mgr_mst_resp_t     ),
+    .Use4BitSize          ( Use4BitSize            )
   ) i_mgr_dw_converter (
     .clk_i,
     .rst_ni,
@@ -332,7 +336,8 @@ module floo_wide_ext_adapter
     .axi_slv_req_t        ( axi_sbr_slv_req_t      ),
     .axi_slv_resp_t       ( axi_sbr_slv_resp_t     ),
     .axi_mst_req_t        ( axi_sbr_mst_req_t      ),
-    .axi_mst_resp_t       ( axi_sbr_mst_resp_t     )
+    .axi_mst_resp_t       ( axi_sbr_mst_resp_t     ),
+    .Use4BitSize          ( Use4BitSize            )
   ) i_sbr_dw_converter (
     .clk_i,
     .rst_ni,

@@ -5,6 +5,7 @@
 // Author: Tim Fischer <fischeti@iis.ee.ethz.ch>
 
 `include "axi/typedef.svh"
+`include "floo_noc/typedef.svh"
 `include "axi/assign.svh"
 `include "common_cells/assertions.svh"
 
@@ -164,7 +165,7 @@ module floo_nw_join #(
 
   `AXI_TYPEDEF_ALL_CT(axi_narrow_iw_conv, axi_narrow_iw_conv_req_t, axi_narrow_iw_conv_rsp_t,
                       addr_t, join_id_conv_t, narrow_data_t, narrow_strb_t, narrow_user_t)
-  `AXI_TYPEDEF_ALL_CT(axi_wide_iw_conv, axi_wide_iw_conv_req_t, axi_wide_iw_conv_rsp_t,
+  `FLOO_WIDE_AXI_TYPEDEF_ALL_CT(axi_wide_iw_conv, axi_wide_iw_conv_req_t, axi_wide_iw_conv_rsp_t,
                       addr_t, join_id_conv_t, wide_data_t, wide_strb_t, wide_user_t)
 
   axi_narrow_iw_conv_req_t axi_narrow_req_iw_conv;
@@ -226,7 +227,7 @@ module floo_nw_join #(
 
   `AXI_TYPEDEF_ALL_CT(axi_narrow_dw_conv, axi_narrow_dw_conv_req_t, axi_narrow_dw_conv_rsp_t,
                       addr_t, join_id_conv_t, join_data_t, join_strb_t, narrow_user_t)
-  `AXI_TYPEDEF_ALL_CT(axi_wide_dw_conv, axi_wide_dw_conv_req_t, axi_wide_dw_conv_rsp_t,
+  `FLOO_WIDE_AXI_TYPEDEF_ALL_CT(axi_wide_dw_conv, axi_wide_dw_conv_req_t, axi_wide_dw_conv_rsp_t,
                       addr_t, join_id_conv_t, join_data_t, join_strb_t, wide_user_t)
 
   axi_narrow_dw_conv_req_t axi_narrow_req_dw_conv;
@@ -290,7 +291,7 @@ module floo_nw_join #(
   ///  User Width Conversion  ///
   ///////////////////////////////
 
-  `AXI_TYPEDEF_ALL_CT(axi_join_uw_conv, axi_join_uw_conv_req_t, axi_join_uw_conv_rsp_t,
+  `FLOO_WIDE_AXI_TYPEDEF_ALL_CT(axi_join_uw_conv, axi_join_uw_conv_req_t, axi_join_uw_conv_rsp_t,
                       addr_t, join_id_conv_t, join_data_t, join_strb_t, join_user_t)
 
   axi_join_uw_conv_req_t axi_wide_req_uw_conv, axi_narrow_req_uw_conv;
@@ -309,7 +310,7 @@ module floo_nw_join #(
   ///  MUX  ///
   /////////////
 
-  `AXI_TYPEDEF_ALL_CT(axi_out, axi_out_req_t, axi_out_rsp_t,
+  `FLOO_WIDE_AXI_TYPEDEF_ALL_CT(axi_out, axi_out_req_t, axi_out_rsp_t,
                       addr_t, join_id_t, join_data_t, join_strb_t, join_user_t)
 
   axi_out_req_t axi_out_req;

@@ -28,6 +28,9 @@ sources:
   # Level 0
   - hw/floo_pkg.sv
   # Level 1
+  - hw/floo_axi_dw_upsizer.sv
+  - hw/floo_axi_dw_downsizer.sv
+  - hw/floo_axi_dw_converter.sv
   - hw/floo_cut.sv
   - hw/floo_fifo.sv
   - hw/floo_cdc.sv
@@ -42,6 +45,7 @@ sources:
   - hw/floo_route_xymask.sv
   - hw/floo_alu.sv
   # Level 2
+  - hw/floo_wide_ext_adapter.sv
   - hw/floo_route_select.sv
   - hw/floo_route_comp.sv
   - hw/floo_meta_buffer.sv

@@ -36,7 +36,7 @@ package axi_pkg_ext;
   /// AXI Transaction Length Width.
   parameter int unsigned LenWidth    = 32'd8;
   /// AXI Transaction Size Width.
-  parameter int unsigned SizeWidth   = 32'd3;
+  parameter int unsigned SizeWidth   = 32'd4;
   /// AXI Lock Width.
   parameter int unsigned LockWidth   = 32'd1;
   /// AXI5 Atomic Operation Width.

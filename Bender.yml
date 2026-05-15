@@ -27,6 +27,14 @@ export_include_dirs:
 sources:
   # Level 0
   - hw/floo_pkg.sv
+  # When the `wide_axi` Bender target is set (i.e. NoC link width > 1024 bits),
+  # compile axi_pkg_wide.sv which re-declares `package axi_pkg` with a 4-bit size
+  # field. Because FlooNoC sources depend on the upstream `axi` package, Bender
+  # guarantees the standard axi_pkg.sv is compiled first; this file is compiled
+  # afterwards and the simulator uses the later definition for all `axi_pkg::`
+  # references throughout the design — no source changes required.
+  # - target: wide_axi
+  #   files:
   - hw/axi_pkg_ext.sv
   # Level 1
   - hw/floo_axi_dw_upsizer.sv

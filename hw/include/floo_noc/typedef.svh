@@ -39,15 +39,15 @@
   typedef struct packed {                                       \
     id_t              id;                                       \
     addr_t            addr;                                     \
-    axi_pkg::len_t    len;                                      \
-    logic [3:0]        size;                                     \
-    axi_pkg::burst_t  burst;                                    \
+    axi_pkg_ext::len_t    len;                                      \
+    axi_pkg_ext::size_t        size;                                     \
+    axi_pkg_ext::burst_t  burst;                                    \
     logic             lock;                                     \
-    axi_pkg::cache_t  cache;                                    \
-    axi_pkg::prot_t   prot;                                     \
-    axi_pkg::qos_t    qos;                                      \
-    axi_pkg::region_t region;                                   \
-    axi_pkg::atop_t   atop;                                     \
+    axi_pkg_ext::cache_t  cache;                                    \
+    axi_pkg_ext::prot_t   prot;                                     \
+    axi_pkg_ext::qos_t    qos;                                      \
+    axi_pkg_ext::region_t region;                                   \
+    axi_pkg_ext::atop_t   atop;                                     \
     user_t            user;                                     \
   } aw_chan_t;
 `define FLOO_WIDE_AXI_TYPEDEF_W_CHAN_T(w_chan_t, data_t, strb_t, user_t)  \
@@ -60,28 +60,28 @@
 `define FLOO_WIDE_AXI_TYPEDEF_B_CHAN_T(b_chan_t, id_t, user_t)  \
   typedef struct packed {                             \
     id_t            id;                               \
-    axi_pkg::resp_t resp;                             \
+    axi_pkg_ext::resp_t resp;                             \
     user_t          user;                             \
   } b_chan_t;
 `define FLOO_WIDE_AXI_TYPEDEF_AR_CHAN_T(ar_chan_t, addr_t, id_t, user_t)  \
   typedef struct packed {                                       \
     id_t              id;                                       \
     addr_t            addr;                                     \
-    axi_pkg::len_t    len;                                      \
+    axi_pkg_ext::len_t    len;                                      \
     logic [3:0]        size;                                     \
-    axi_pkg::burst_t  burst;                                    \
+    axi_pkg_ext::burst_t  burst;                                    \
     logic             lock;                                     \
-    axi_pkg::cache_t  cache;                                    \
-    axi_pkg::prot_t   prot;                                     \
-    axi_pkg::qos_t    qos;                                      \
-    axi_pkg::region_t region;                                   \
+    axi_pkg_ext::cache_t  cache;                                    \
+    axi_pkg_ext::prot_t   prot;                                     \
+    axi_pkg_ext::qos_t    qos;                                      \
+    axi_pkg_ext::region_t region;                                   \
     user_t            user;                                     \
   } ar_chan_t;
 `define FLOO_WIDE_AXI_TYPEDEF_R_CHAN_T(r_chan_t, data_t, id_t, user_t)  \
   typedef struct packed {                                     \
     id_t            id;                                       \
     data_t          data;                                     \
-    axi_pkg::resp_t resp;                                     \
+    axi_pkg_ext::resp_t resp;                                     \
     logic           last;                                     \
     user_t          user;                                     \
   } r_chan_t;

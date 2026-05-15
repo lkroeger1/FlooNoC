@@ -832,7 +832,7 @@ module floo_nw_chimney
     .RoBSize        ( ChimneyCfgW.BRoBSize      ),
     .MaxRoTxnsPerId ( ChimneyCfgW.MaxTxnsPerId  ),
     .OnlyMetaData   ( 1'b1                      ),
-    .ax_len_t       ( axi_pkg::len_t            ),
+    .ax_len_t       ( axi_pkg_ext::len_t            ),
     .ax_id_t        ( axi_wide_in_id_t          ),
     .rsp_chan_t     ( axi_wide_b_chan_t         ),
     .rsp_meta_t     ( axi_wide_b_chan_t         ),
@@ -873,7 +873,7 @@ module floo_nw_chimney
   typedef struct packed {
     axi_wide_in_id_t  id;
     axi_wide_user_t   user;
-    axi_pkg::resp_t   resp;
+    axi_pkg_ext::resp_t   resp;
     logic             last;
   } wide_r_rob_meta_t;
 
@@ -936,7 +936,7 @@ module floo_nw_chimney
     .RoBSize        ( ChimneyCfgW.RRoBSize      ),
     .MaxRoTxnsPerId ( ChimneyCfgW.MaxTxnsPerId  ),
     .OnlyMetaData   ( 1'b0                      ),
-    .ax_len_t       ( axi_pkg::len_t            ),
+    .ax_len_t       ( axi_pkg_ext::len_t            ),
     .ax_id_t        ( axi_wide_in_id_t          ),
     .rsp_chan_t     ( axi_wide_r_chan_t         ),
     .rsp_data_t     ( axi_wide_data_t           ),

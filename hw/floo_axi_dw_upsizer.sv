@@ -59,9 +59,9 @@ module floo_axi_dw_upsizer #(
   /*****************
    *  DEFINITIONS  *
    *****************/
-  import axi_pkg::aligned_addr;
-  import axi_pkg::beat_addr   ;
-  import axi_pkg::modifiable  ;
+  import axi_pkg_ext::aligned_addr;
+  import axi_pkg_ext::beat_addr   ;
+  import axi_pkg_ext::modifiable  ;
 
   import cf_math_pkg::idx_width;
 

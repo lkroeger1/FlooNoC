@@ -58,8 +58,8 @@ module floo_axi_dw_downsizer #(
   /*****************
    *  DEFINITIONS  *
    *****************/
-  import axi_pkg::aligned_addr;
-  import axi_pkg::modifiable  ;
+  import axi_pkg_ext::aligned_addr;
+  import axi_pkg_ext::modifiable  ;
 
   import cf_math_pkg::idx_width;
 
@@ -603,11 +603,11 @@ module floo_axi_dw_downsizer #(
                   r_req_d.r.user    = mst_resp.r.user         ;
 
                   // Merge response of this beat with prior one according to precedence rules.
-                  r_req_d.r.resp = axi_pkg::resp_precedence(r_req_q.r.resp, mst_resp.r.resp);
+                  r_req_d.r.resp = axi_pkg_ext::resp_precedence(r_req_q.r.resp, mst_resp.r.resp);
 
                   case (r_req_d.ar.burst)
                     axi_pkg::BURST_INCR: begin
-                      r_req_d.ar.addr = aligned_addr(axi_pkg::largest_addr_t'(r_req_q.ar.addr), r_req_q.ar.size) + (1 << r_req_q.ar.size);
+                      r_req_d.ar.addr = aligned_addr(axi_pkg_ext::largest_addr_t'(r_req_q.ar.addr), r_req_q.ar.size) + (1 << r_req_q.ar.size);
                     end
                     axi_pkg::BURST_FIXED: begin
                       r_req_d.ar.addr = r_req_q.ar.addr;
@@ -627,8 +627,8 @@ module floo_axi_dw_downsizer #(
                     R_INCR_DOWNSIZE, R_SPLIT_INCR_DOWNSIZE: begin
                       // Forward when the burst is finished, or after filling up a word
                       if (r_req_q.burst_len == 0 ||
-                          (aligned_addr(axi_pkg::largest_addr_t'(r_req_d.ar.addr), r_req_q.orig_ar_size) !=
-                           aligned_addr(axi_pkg::largest_addr_t'(r_req_q.ar.addr), r_req_q.orig_ar_size)   )) begin
+                          (aligned_addr(axi_pkg_ext::largest_addr_t'(r_req_d.ar.addr), r_req_q.orig_ar_size) !=
+                           aligned_addr(axi_pkg_ext::largest_addr_t'(r_req_q.ar.addr), r_req_q.orig_ar_size)   )) begin
                         r_req_d.r_valid = 1'b1;
                       end
                     end

@@ -225,11 +225,41 @@ module floo_nw_join #(
     .mst_resp_i ( axi_wide_rsp_iw_conv )
   );
 
+  `FLOO_WIDE_AXI_TYPEDEF_ALL_CT(axi_narrow_iw_conv_inter, axi_narrow_iw_conv_inter_req_t, axi_narrow_iw_conv_inter_rsp_t,
+                      addr_t, join_id_conv_t, narrow_data_t, narrow_strb_t, narrow_user_t)
+
+  axi_narrow_iw_conv_inter_req_t axi_narrow_req_iw_conv_inter;
+  axi_narrow_iw_conv_inter_rsp_t axi_narrow_rsp_iw_conv_inter;
+    // ---------------------------------------------------------------------------
+  // Cluster-boundary adaptation: cluster (3-bit size) ↔ converter (4-bit size)
+  // ---------------------------------------------------------------------------
+
+  // Manager path: cluster → converter  (zero-extend size to 4-bit)
+  always_comb begin
+    axi_narrow_req_iw_conv_inter            = '0;
+    axi_narrow_req_iw_conv_inter.aw_valid   = axi_narrow_req_iw_conv.aw_valid;
+    axi_narrow_req_iw_conv_inter.aw         = '0;
+    `AXI_SET_AW_STRUCT(axi_narrow_req_iw_conv_inter.aw, axi_narrow_req_iw_conv.aw)
+    axi_narrow_req_iw_conv_inter.w_valid    = axi_narrow_req_iw_conv.w_valid;
+    axi_narrow_req_iw_conv_inter.w.data     = axi_narrow_req_iw_conv.w.data;
+    axi_narrow_req_iw_conv_inter.w.strb     = axi_narrow_req_iw_conv.w.strb;
+    axi_narrow_req_iw_conv_inter.w.last     = axi_narrow_req_iw_conv.w.last;
+    axi_narrow_req_iw_conv_inter.w.user     = axi_narrow_req_iw_conv.w.user;
+    axi_narrow_req_iw_conv_inter.b_ready    = axi_narrow_req_iw_conv.b_ready;
+    axi_narrow_req_iw_conv_inter.ar_valid   = axi_narrow_req_iw_conv.ar_valid;
+    axi_narrow_req_iw_conv_inter.ar         = '0;
+    `AXI_SET_AR_STRUCT(axi_narrow_req_iw_conv_inter.ar, axi_narrow_req_iw_conv.ar)
+    axi_narrow_req_iw_conv_inter.r_ready    = axi_narrow_req_iw_conv.r_ready;
+  end
+
+  // Subordinate path: converter → cluster  (response has no size field, direct assign)
+  `AXI_ASSIGN_RESP_STRUCT(axi_narrow_rsp_iw_conv, axi_narrow_rsp_iw_conv_inter)
+
   ///////////////////////////////
   ///  Data width conversion  ///
   ///////////////////////////////
 
-  `AXI_TYPEDEF_ALL_CT(axi_narrow_dw_conv, axi_narrow_dw_conv_req_t, axi_narrow_dw_conv_rsp_t,
+  `FLOO_WIDE_AXI_TYPEDEF_ALL_CT(axi_narrow_dw_conv, axi_narrow_dw_conv_req_t, axi_narrow_dw_conv_rsp_t,
                       addr_t, join_id_conv_t, join_data_t, join_strb_t, narrow_user_t)
   `FLOO_WIDE_AXI_TYPEDEF_ALL_CT(axi_wide_dw_conv, axi_wide_dw_conv_req_t, axi_wide_dw_conv_rsp_t,
                       addr_t, join_id_conv_t, join_data_t, join_strb_t, wide_user_t)
@@ -239,28 +269,28 @@ module floo_nw_join #(
   axi_wide_dw_conv_req_t axi_wide_req_dw_conv;
   axi_wide_dw_conv_rsp_t axi_wide_rsp_dw_conv;
 
-  axi_dw_converter #(
+  floo_axi_dw_converter #(
     .AxiMaxReads         ( AxiNarrowMaxReadTxns ),
     .AxiSlvPortDataWidth ( AxiCfgN.DataWidth    ),
     .AxiMstPortDataWidth ( AxiCfgJoin.DataWidth ),
     .AxiAddrWidth        ( AxiCfgJoin.AddrWidth ),
     .AxiIdWidth          ( AxiIdConvWidth       ),
-    .aw_chan_t           ( axi_narrow_iw_conv_aw_chan_t ),
+    .aw_chan_t           ( axi_narrow_dw_conv_aw_chan_t ),
     .mst_w_chan_t        ( axi_narrow_dw_conv_w_chan_t  ),
-    .slv_w_chan_t        ( axi_narrow_iw_conv_w_chan_t  ),
-    .b_chan_t            ( axi_narrow_iw_conv_b_chan_t  ),
-    .ar_chan_t           ( axi_narrow_iw_conv_ar_chan_t ),
+    .slv_w_chan_t        ( axi_narrow_iw_conv_inter_w_chan_t  ),
+    .b_chan_t            ( axi_narrow_iw_conv_inter_b_chan_t  ),
+    .ar_chan_t           ( axi_narrow_dw_conv_ar_chan_t ),
     .mst_r_chan_t        ( axi_narrow_dw_conv_r_chan_t  ),
-    .slv_r_chan_t        ( axi_narrow_iw_conv_r_chan_t  ),
+    .slv_r_chan_t        ( axi_narrow_iw_conv_inter_r_chan_t  ),
     .axi_mst_req_t       ( axi_narrow_dw_conv_req_t ),
     .axi_mst_resp_t      ( axi_narrow_dw_conv_rsp_t ),
-    .axi_slv_req_t       ( axi_narrow_iw_conv_req_t ),
-    .axi_slv_resp_t      ( axi_narrow_iw_conv_rsp_t )
-  ) i_axi_narrow_dw_converter (
+    .axi_slv_req_t       ( axi_narrow_iw_conv_inter_req_t ),
+    .axi_slv_resp_t      ( axi_narrow_iw_conv_inter_rsp_t )
+  ) i_floo_axi_narrow_dw_converter (
     .clk_i,
     .rst_ni,
-    .slv_req_i  ( axi_narrow_req_iw_conv ),
-    .slv_resp_o ( axi_narrow_rsp_iw_conv ),
+    .slv_req_i  ( axi_narrow_req_iw_conv_inter ),
+    .slv_resp_o ( axi_narrow_rsp_iw_conv_inter ),
     .mst_req_o  ( axi_narrow_req_dw_conv ),
     .mst_resp_i ( axi_narrow_rsp_dw_conv )
   );

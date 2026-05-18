@@ -94,7 +94,7 @@ module floo_nw_chimney
   /// Struct for the wide user field in AXI
   parameter type user_wide_struct_t                     = logic,
   // Extended AXI size field
-  parameter bit Use4BitSize = 1'b10
+  parameter bit Use4BitSize = 1'b0
 ) (
   input  logic clk_i,
   input  logic rst_ni,

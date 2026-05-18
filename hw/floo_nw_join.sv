@@ -66,7 +66,7 @@ module floo_nw_join #(
   /// Maximum number of in-flight transactions with the same ID at the wide master port.
   parameter int unsigned AxiWideMstPortMaxTxnsPerId   = AxiWideMaxTxns,
   /// Parameter to increase the size bit field of axi to 4 bit
-  parameter bit Use4BitSize                        = 1'b1,
+  parameter bit Use4BitSize                        = 1'b0,
   /// Attach a Atop RISC-V adapter in the end to resolve atomic operations
   parameter bit EnAtopAdapter                         = 1'b1,
   /// Use user signals for the ATOP adapter
@@ -105,6 +105,8 @@ module floo_nw_join #(
   typedef logic [AxiCfgW.DataWidth-1:0] wide_data_t;
   typedef logic [AxiCfgW.DataWidth/8-1:0] wide_strb_t;
   typedef logic [AxiCfgW.UserWidth-1:0] wide_user_t;
+
+  typedef logic [Use4BitSize ? 3 : 2:0] axi_wide_ext_size_t;
 
   // Joined types
   typedef logic [AxiCfgJoin.AddrWidth-1:0] addr_t;
@@ -170,7 +172,7 @@ module floo_nw_join #(
   `AXI_TYPEDEF_ALL_CT(axi_narrow_iw_conv, axi_narrow_iw_conv_req_t, axi_narrow_iw_conv_rsp_t,
                       addr_t, join_id_conv_t, narrow_data_t, narrow_strb_t, narrow_user_t)
   `FLOO_WIDE_AXI_TYPEDEF_ALL_CT(axi_wide_iw_conv, axi_wide_iw_conv_req_t, axi_wide_iw_conv_rsp_t,
-                      addr_t, join_id_conv_t, wide_data_t, wide_strb_t, wide_user_t)
+                      addr_t, join_id_conv_t, wide_data_t, wide_strb_t, wide_user_t, axi_wide_ext_size_t)
 
   axi_narrow_iw_conv_req_t axi_narrow_req_iw_conv;
   axi_narrow_iw_conv_rsp_t axi_narrow_rsp_iw_conv;
@@ -226,7 +228,7 @@ module floo_nw_join #(
   );
 
   `FLOO_WIDE_AXI_TYPEDEF_ALL_CT(axi_narrow_iw_conv_inter, axi_narrow_iw_conv_inter_req_t, axi_narrow_iw_conv_inter_rsp_t,
-                      addr_t, join_id_conv_t, narrow_data_t, narrow_strb_t, narrow_user_t)
+                      addr_t, join_id_conv_t, narrow_data_t, narrow_strb_t, narrow_user_t, axi_wide_ext_size_t)
 
   axi_narrow_iw_conv_inter_req_t axi_narrow_req_iw_conv_inter;
   axi_narrow_iw_conv_inter_rsp_t axi_narrow_rsp_iw_conv_inter;
@@ -260,9 +262,9 @@ module floo_nw_join #(
   ///////////////////////////////
 
   `FLOO_WIDE_AXI_TYPEDEF_ALL_CT(axi_narrow_dw_conv, axi_narrow_dw_conv_req_t, axi_narrow_dw_conv_rsp_t,
-                      addr_t, join_id_conv_t, join_data_t, join_strb_t, narrow_user_t)
+                      addr_t, join_id_conv_t, join_data_t, join_strb_t, narrow_user_t, axi_wide_ext_size_t)
   `FLOO_WIDE_AXI_TYPEDEF_ALL_CT(axi_wide_dw_conv, axi_wide_dw_conv_req_t, axi_wide_dw_conv_rsp_t,
-                      addr_t, join_id_conv_t, join_data_t, join_strb_t, wide_user_t)
+                      addr_t, join_id_conv_t, join_data_t, join_strb_t, wide_user_t, axi_wide_ext_size_t)
 
   axi_narrow_dw_conv_req_t axi_narrow_req_dw_conv;
   axi_narrow_dw_conv_rsp_t axi_narrow_rsp_dw_conv;
@@ -327,7 +329,7 @@ module floo_nw_join #(
   ///////////////////////////////
 
   `FLOO_WIDE_AXI_TYPEDEF_ALL_CT(axi_join_uw_conv, axi_join_uw_conv_req_t, axi_join_uw_conv_rsp_t,
-                      addr_t, join_id_conv_t, join_data_t, join_strb_t, join_user_t)
+                      addr_t, join_id_conv_t, join_data_t, join_strb_t, join_user_t, axi_wide_ext_size_t)
 
   axi_join_uw_conv_req_t axi_wide_req_uw_conv, axi_narrow_req_uw_conv;
   axi_join_uw_conv_rsp_t axi_wide_rsp_uw_conv, axi_narrow_rsp_uw_conv;
@@ -346,7 +348,7 @@ module floo_nw_join #(
   /////////////
 
   `FLOO_WIDE_AXI_TYPEDEF_ALL_CT(axi_out, axi_out_req_t, axi_out_rsp_t,
-                      addr_t, join_id_t, join_data_t, join_strb_t, join_user_t)
+                      addr_t, join_id_t, join_data_t, join_strb_t, join_user_t, axi_wide_ext_size_t)
 
   axi_out_req_t axi_out_req;
   axi_out_rsp_t axi_out_rsp;

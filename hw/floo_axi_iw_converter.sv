@@ -98,7 +98,7 @@ module floo_axi_iw_converter #(
   /// Response struct type of the AXI4+ATOP master port
   parameter type mst_resp_t = logic,
   // See if the AXI size field needs to be increased to 4 bits to support the maximum data width
-  parameter bit Use4BitSize = 1'b1
+  parameter bit Use4BitSize = 1'b0
 ) (
   /// Rising-edge clock of both ports
   input  logic      clk_i,
@@ -121,36 +121,16 @@ module floo_axi_iw_converter #(
   typedef logic [AxiDataWidth/8-1:0]    strb_t;
   typedef logic [AxiUserWidth-1:0]      user_t;
 
-  // if (Use4BitSize) begin : gen_size_width_4
-  //   `FLOO_WIDE_AXI_TYPEDEF_AW_CHAN_T(slv_aw_t, addr_t, slv_id_t, user_t)
-  //   `FLOO_WIDE_AXI_TYPEDEF_AW_CHAN_T(mst_aw_t, addr_t, mst_id_t, user_t)
-  //   `AXI_TYPEDEF_W_CHAN_T(w_t, data_t, strb_t, user_t)
-  //   `AXI_TYPEDEF_B_CHAN_T(slv_b_t, slv_id_t, user_t)
-  //   `AXI_TYPEDEF_B_CHAN_T(mst_b_t, mst_id_t, user_t)
-  //   `FLOO_WIDE_AXI_TYPEDEF_AR_CHAN_T(slv_ar_t, addr_t, slv_id_t, user_t)
-  //   `FLOO_WIDE_AXI_TYPEDEF_AR_CHAN_T(mst_ar_t, addr_t, mst_id_t, user_t)
-  //   `AXI_TYPEDEF_R_CHAN_T(slv_r_t, data_t, slv_id_t, user_t)
-  //   `AXI_TYPEDEF_R_CHAN_T(mst_r_t, data_t, mst_id_t, user_t)
-  // end else begin : gen_size_width_3
-  //   `AXI_TYPEDEF_AW_CHAN_T(slv_aw_t, addr_t, slv_id_t, user_t)
-  //   `AXI_TYPEDEF_AW_CHAN_T(mst_aw_t, addr_t, mst_id_t, user_t)
-  //   `AXI_TYPEDEF_W_CHAN_T(w_t, data_t, strb_t, user_t)
-  //   `AXI_TYPEDEF_B_CHAN_T(slv_b_t, slv_id_t, user_t)
-  //   `AXI_TYPEDEF_B_CHAN_T(mst_b_t, mst_id_t, user_t)
-  //   `AXI_TYPEDEF_AR_CHAN_T(slv_ar_t, addr_t, slv_id_t, user_t)
-  //   `AXI_TYPEDEF_AR_CHAN_T(mst_ar_t, addr_t, mst_id_t, user_t)
-  //   `AXI_TYPEDEF_R_CHAN_T(slv_r_t, data_t, slv_id_t, user_t)
-  //   `AXI_TYPEDEF_R_CHAN_T(mst_r_t, data_t, mst_id_t, user_t)
-  // end
+  typedef logic [Use4BitSize ? 3 : 2:0] axi_wide_ext_size_t;
 
 
-  `FLOO_WIDE_AXI_TYPEDEF_AW_CHAN_T(slv_aw_t, addr_t, slv_id_t, user_t)
-  `FLOO_WIDE_AXI_TYPEDEF_AW_CHAN_T(mst_aw_t, addr_t, mst_id_t, user_t)
+  `FLOO_WIDE_AXI_TYPEDEF_AW_CHAN_T(slv_aw_t, addr_t, slv_id_t, user_t, axi_wide_ext_size_t)
+  `FLOO_WIDE_AXI_TYPEDEF_AW_CHAN_T(mst_aw_t, addr_t, mst_id_t, user_t, axi_wide_ext_size_t)
   `AXI_TYPEDEF_W_CHAN_T(w_t, data_t, strb_t, user_t)
   `AXI_TYPEDEF_B_CHAN_T(slv_b_t, slv_id_t, user_t)
   `AXI_TYPEDEF_B_CHAN_T(mst_b_t, mst_id_t, user_t)
-  `FLOO_WIDE_AXI_TYPEDEF_AR_CHAN_T(slv_ar_t, addr_t, slv_id_t, user_t)
-  `FLOO_WIDE_AXI_TYPEDEF_AR_CHAN_T(mst_ar_t, addr_t, mst_id_t, user_t)
+  `FLOO_WIDE_AXI_TYPEDEF_AR_CHAN_T(slv_ar_t, addr_t, slv_id_t, user_t, axi_wide_ext_size_t)
+  `FLOO_WIDE_AXI_TYPEDEF_AR_CHAN_T(mst_ar_t, addr_t, mst_id_t, user_t, axi_wide_ext_size_t)
   `AXI_TYPEDEF_R_CHAN_T(slv_r_t, data_t, slv_id_t, user_t)
   `AXI_TYPEDEF_R_CHAN_T(mst_r_t, data_t, mst_id_t, user_t)
 

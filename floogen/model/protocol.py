@@ -82,7 +82,7 @@ class AXI4(ProtocolDesc):
         # the "size" field of the AXI4 protocol needs to be extended to 4 bit, the cluster_tile then automatically uses an adapter to connect to the NoC.
         # An adapter is needed at every endpoint of the NoC then, so we keep the size at 3 bit to preserve the AXI4 compliance without the adapter if we are <= 1024.
 
-        if self.data_width > 256:
+        if self.data_width > 1024:
             string += f"`FLOO_WIDE_AXI_TYPEDEF_ALL_CT({name_t}, \
                 {name_t}_req_t, \
                 {name_t}_rsp_t, \
@@ -90,7 +90,8 @@ class AXI4(ProtocolDesc):
                 {name_t}_id_t, \
                 {name_t}_data_t, \
                 {name_t}_strb_t, \
-                {name_t}_user_t)\n\n"
+                {name_t}_user_t, \
+                logic [3:0])\n\n"
             return string
         else:
             string += f"`AXI_TYPEDEF_ALL_CT({name_t}, \

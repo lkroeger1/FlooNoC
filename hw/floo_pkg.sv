@@ -449,13 +449,13 @@ package floo_pkg;
       NarrowAr: return axi_pkg::ar_width(cfg_n.AddrWidth, cfg_n.InIdWidth, cfg_n.UserWidth);
       NarrowB: return axi_pkg::b_width(cfg_n.InIdWidth, cfg_n.UserWidth);
       NarrowR: return axi_pkg::r_width(cfg_n.DataWidth, cfg_n.InIdWidth, cfg_n.UserWidth);
-      WideAw: return axi_pkg_ext::aw_width(cfg_w.AddrWidth, cfg_w.InIdWidth, cfg_w.UserWidth);// +
-                     //(cfg_w.DataWidth > 1024 ? 1 : 0); // +1 for 4-bit size field when DataWidth > 1024
-      WideW: return axi_pkg_ext::w_width(cfg_w.DataWidth, cfg_w.UserWidth);
-      WideR: return axi_pkg_ext::r_width(cfg_w.DataWidth, cfg_w.InIdWidth, cfg_w.UserWidth);
-      WideAr: return axi_pkg_ext::ar_width(cfg_w.AddrWidth, cfg_w.InIdWidth, cfg_w.UserWidth); //+
-                    //  (cfg_w.DataWidth > 1024 ? 1 : 0); // +1 for 4-bit size field when DataWidth > 1024
-      WideB: return axi_pkg_ext::b_width(cfg_w.InIdWidth, cfg_w.UserWidth);
+      WideAw: return axi_pkg::aw_width(cfg_w.AddrWidth, cfg_w.InIdWidth, cfg_w.UserWidth) +
+                     (cfg_w.DataWidth > 1024 ? 1 : 0); // +1 for 4-bit size field when DataWidth > 1024
+      WideW: return axi_pkg::w_width(cfg_w.DataWidth, cfg_w.UserWidth);
+      WideR: return axi_pkg::r_width(cfg_w.DataWidth, cfg_w.InIdWidth, cfg_w.UserWidth);
+      WideAr: return axi_pkg::ar_width(cfg_w.AddrWidth, cfg_w.InIdWidth, cfg_w.UserWidth) +
+                      (cfg_w.DataWidth > 1024 ? 1 : 0); // +1 for 4-bit size field when DataWidth > 1024
+      WideB: return axi_pkg::b_width(cfg_w.InIdWidth, cfg_w.UserWidth);
       default: $error("Invalid AXI channel");
     endcase
   endfunction

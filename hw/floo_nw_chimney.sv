@@ -94,7 +94,7 @@ module floo_nw_chimney
   /// Struct for the wide user field in AXI
   parameter type user_wide_struct_t                     = logic,
   // Extended AXI size field
-  parameter bit Use4BitSize = 1'b1
+  parameter bit Use4BitSize = 1'b10
 ) (
   input  logic clk_i,
   input  logic rst_ni,
@@ -160,12 +160,14 @@ module floo_nw_chimney
   //   `FLOO_TYPEDEF_NW_CHAN_ALL(axi, req, rsp, wide, axi_narrow, axi_wide, AxiCfgN, AxiCfgW, hdr_t)
   // end
 
+  typedef logic [Use4BitSize ? 3 : 2:0] axi_wide_ext_size_t;
+
 
   `AXI_TYPEDEF_ALL_CT(axi_narrow, axi_narrow_req_t, axi_narrow_rsp_t, axi_addr_t,
       axi_narrow_in_id_t, axi_narrow_data_t, axi_narrow_strb_t, axi_narrow_user_t)
   `FLOO_WIDE_AXI_TYPEDEF_ALL_CT(axi_wide, axi_wide_req_t, axi_wide_rsp_t, axi_addr_t,
-      axi_wide_in_id_t, axi_wide_data_t, axi_wide_strb_t, axi_wide_user_t)
-  `FLOO_WIDE_AXI_TYPEDEF_AW_CHAN_T(axi_wide_out_aw_chan_t, axi_addr_t, axi_wide_out_id_t, axi_wide_user_t)
+      axi_wide_in_id_t, axi_wide_data_t, axi_wide_strb_t, axi_wide_user_t, axi_wide_ext_size_t)
+  `FLOO_WIDE_AXI_TYPEDEF_AW_CHAN_T(axi_wide_out_aw_chan_t, axi_addr_t, axi_wide_out_id_t, axi_wide_user_t, axi_wide_ext_size_t)
   `AXI_TYPEDEF_AW_CHAN_T(axi_narrow_out_aw_chan_t, axi_addr_t,
                         axi_narrow_out_id_t, axi_narrow_user_t)
   `FLOO_TYPEDEF_NW_CHAN_ALL(axi, req, rsp, wide, axi_narrow, axi_wide, AxiCfgN, AxiCfgW, hdr_t)
@@ -832,7 +834,7 @@ module floo_nw_chimney
     .RoBSize        ( ChimneyCfgW.BRoBSize      ),
     .MaxRoTxnsPerId ( ChimneyCfgW.MaxTxnsPerId  ),
     .OnlyMetaData   ( 1'b1                      ),
-    .ax_len_t       ( axi_pkg_ext::len_t            ),
+    .ax_len_t       ( axi_pkg::len_t            ),
     .ax_id_t        ( axi_wide_in_id_t          ),
     .rsp_chan_t     ( axi_wide_b_chan_t         ),
     .rsp_meta_t     ( axi_wide_b_chan_t         ),
@@ -873,7 +875,7 @@ module floo_nw_chimney
   typedef struct packed {
     axi_wide_in_id_t  id;
     axi_wide_user_t   user;
-    axi_pkg_ext::resp_t   resp;
+    axi_pkg::resp_t   resp;
     logic             last;
   } wide_r_rob_meta_t;
 
@@ -936,7 +938,7 @@ module floo_nw_chimney
     .RoBSize        ( ChimneyCfgW.RRoBSize      ),
     .MaxRoTxnsPerId ( ChimneyCfgW.MaxTxnsPerId  ),
     .OnlyMetaData   ( 1'b0                      ),
-    .ax_len_t       ( axi_pkg_ext::len_t            ),
+    .ax_len_t       ( axi_pkg::len_t            ),
     .ax_id_t        ( axi_wide_in_id_t          ),
     .rsp_chan_t     ( axi_wide_r_chan_t         ),
     .rsp_data_t     ( axi_wide_data_t           ),

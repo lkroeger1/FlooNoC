@@ -43,7 +43,7 @@ module floo_axi_dw_upsizer #(
     parameter type axi_mst_resp_t              = logic, // AXI Response Type for mst ports
     parameter type axi_slv_req_t               = logic, // AXI Request Type for slv ports
     parameter type axi_slv_resp_t              = logic, // AXI Response Type for slv ports
-    parameter bit Use4BitSize = 1'b1 // See if the AXI size field needs to be increased to 4 bits to support the maximum data width
+    parameter bit Use4BitSize = 1'b0 // See if the AXI size field needs to be increased to 4 bits to support the maximum data width
 
   ) (
     input  logic          clk_i,
@@ -59,9 +59,9 @@ module floo_axi_dw_upsizer #(
   /*****************
    *  DEFINITIONS  *
    *****************/
-  import axi_pkg_ext::aligned_addr;
-  import axi_pkg_ext::beat_addr   ;
-  import axi_pkg_ext::modifiable  ;
+  // These functions are re-implemented locally using the module's own ext_aw_ar_size_t
+  // (which is 3 or 4 bits depending on Use4BitSize), so that no external axi_pkg_ext
+  // package is required. All three are direct ports of their axi_pkg equivalents.
 
   import cf_math_pkg::idx_width;
 
@@ -83,8 +83,9 @@ module floo_axi_dw_upsizer #(
   // Address width
   typedef logic [AxiAddrWidth-1:0] addr_t;
 
-  //New size width
-
+  // Extended size field: 3 bits (standard AXI4, DataWidth <= 1024) or
+  // 4 bits (extended, DataWidth > 1024).  Matches Use4BitSize from the
+  // generated NoC package (floo_*_noc_pkg::Use4BitSize).
   localparam int unsigned SizeWidth = Use4BitSize ? 4 : 3;
   typedef logic [SizeWidth-1:0] ext_aw_ar_size_t;
 
@@ -93,6 +94,54 @@ module floo_axi_dw_upsizer #(
 
   // Length of burst after upsizing
   typedef logic [$clog2(AxiMstPortStrbWidth/AxiSlvPortStrbWidth) + 7:0] burst_len_t;
+
+  // -----------------------------------------------------------------------
+  // Local reimplementations of axi_pkg / axi_pkg_ext helper functions.
+  // Using ext_aw_ar_size_t eliminates the external axi_pkg_ext dependency.
+  // -----------------------------------------------------------------------
+  typedef logic [127:0] largest_addr_t;
+
+  function automatic largest_addr_t aligned_addr(largest_addr_t addr, ext_aw_ar_size_t size);
+    return (addr >> size) << size;
+  endfunction
+
+  function automatic shortint unsigned num_bytes_local(ext_aw_ar_size_t size);
+    return shortint'(1 << size);
+  endfunction
+
+  function automatic largest_addr_t wrap_boundary_local(
+    largest_addr_t addr, ext_aw_ar_size_t size, axi_pkg::len_t len);
+    largest_addr_t wrap_addr;
+    unique case (len)
+      axi_pkg::len_t'(4'b1   ): wrap_addr = (addr>>(unsigned'(size)+1))<<(unsigned'(size)+1);
+      axi_pkg::len_t'(4'b11  ): wrap_addr = (addr>>(unsigned'(size)+2))<<(unsigned'(size)+2);
+      axi_pkg::len_t'(4'b111 ): wrap_addr = (addr>>(unsigned'(size)+3))<<(unsigned'(size)+3);
+      axi_pkg::len_t'(4'b1111): wrap_addr = (addr>>(unsigned'(size)+4))<<(unsigned'(size)+4);
+      default: wrap_addr = '0;
+    endcase
+    return wrap_addr;
+  endfunction
+
+  function automatic largest_addr_t beat_addr(
+    largest_addr_t addr, ext_aw_ar_size_t size,
+    axi_pkg::len_t len, axi_pkg::burst_t burst, shortint unsigned i_beat);
+    largest_addr_t ret_addr = addr;
+    largest_addr_t wrp_bond = '0;
+    if (burst == axi_pkg::BURST_WRAP)
+      wrp_bond = wrap_boundary_local(addr, size, len);
+    if (i_beat != 0 && burst != axi_pkg::BURST_FIXED) begin
+      ret_addr = aligned_addr(addr, size) + i_beat * num_bytes_local(size);
+      if (burst == axi_pkg::BURST_WRAP &&
+          ret_addr >= wrp_bond + (num_bytes_local(size) * (largest_addr_t'(len) + 1)))
+        ret_addr = ret_addr - (num_bytes_local(size) * (largest_addr_t'(len) + 1));
+    end
+    return ret_addr;
+  endfunction
+
+  function automatic logic modifiable(axi_pkg::cache_t cache);
+    return |(cache & axi_pkg::CACHE_MODIFIABLE);
+  endfunction
+  // -----------------------------------------------------------------------
 
   // Internal AXI bus
   axi_mst_req_t  mst_req;

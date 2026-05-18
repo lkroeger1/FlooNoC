@@ -66,4 +66,10 @@ package floo_${name}_noc_pkg;
   ${noc.routing.collective.render_reduction_typedefs("AxiCfgN", "AxiCfgW")}
 % endif
 
+  // AXI size field width: 3-bit (standard AXI4, DataWidth <= 1024) or
+  // 4-bit (extended, DataWidth > 1024 requires size values up to 9 for 512-byte beats).
+  // Consumers (floo_wide_ext_adapter, cluster_tile) import this localparam so the
+  // decision is made exactly once, here in the generated package.
+  localparam bit Use4BitSize = (AxiCfgW.DataWidth > 1024);
+
 endpackage

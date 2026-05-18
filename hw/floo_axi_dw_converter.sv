@@ -37,7 +37,7 @@ module floo_axi_dw_converter #(
     parameter type axi_mst_resp_t              = logic, // AXI Response Type for mst ports
     parameter type axi_slv_req_t               = logic, // AXI Request Type for slv ports
     parameter type axi_slv_resp_t              = logic, // AXI Response Type for slv ports
-    parameter bit Use4BitSize = 1'b1 // See if the AXI size field needs to be increased to 4 bits to support the maximum data width
+    parameter bit Use4BitSize = 1'b0 // See if the AXI size field needs to be increased to 4 bits to support the maximum data width
   ) (
     input  logic          clk_i,
     input  logic          rst_ni,
@@ -71,7 +71,8 @@ module floo_axi_dw_converter #(
       .axi_mst_req_t      (axi_mst_req_t      ),
       .axi_mst_resp_t     (axi_mst_resp_t     ),
       .axi_slv_req_t      (axi_slv_req_t      ),
-      .axi_slv_resp_t     (axi_slv_resp_t     )
+      .axi_slv_resp_t     (axi_slv_resp_t     ),
+      .Use4BitSize        (Use4BitSize        )
     ) i_floo_axi_dw_upsizer (
       .clk_i     (clk_i     ),
       .rst_ni    (rst_ni    ),
@@ -101,7 +102,8 @@ module floo_axi_dw_converter #(
       .axi_mst_req_t      (axi_mst_req_t      ),
       .axi_mst_resp_t     (axi_mst_resp_t     ),
       .axi_slv_req_t      (axi_slv_req_t      ),
-      .axi_slv_resp_t     (axi_slv_resp_t     )
+      .axi_slv_resp_t     (axi_slv_resp_t     ),
+      .Use4BitSize        (Use4BitSize        )
     ) i_floo_axi_dw_downsizer (
       .clk_i     (clk_i     ),
       .rst_ni    (rst_ni    ),

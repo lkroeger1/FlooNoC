@@ -42,7 +42,7 @@ module floo_axi_dw_downsizer #(
     parameter type axi_mst_resp_t              = logic, // AXI Response Type for mst ports
     parameter type axi_slv_req_t               = logic, // AXI Request Type for slv ports
     parameter type axi_slv_resp_t              = logic, // AXI Response Type for slv ports
-    parameter bit Use4BitSize = 1'b1 // See if the AXI size field needs to be increased to 4 bits to support the maximum data width
+    parameter bit Use4BitSize = 1'b0 // See if the AXI size field needs to be increased to 4 bits to support the maximum data width
 
   ) (
     input  logic          clk_i,
@@ -58,8 +58,8 @@ module floo_axi_dw_downsizer #(
   /*****************
    *  DEFINITIONS  *
    *****************/
-  import axi_pkg_ext::aligned_addr;
-  import axi_pkg_ext::modifiable  ;
+  // aligned_addr and modifiable are re-implemented locally using ext_aw_ar_size_t so
+  // that no external axi_pkg_ext package is required.
 
   import cf_math_pkg::idx_width;
 
@@ -77,9 +77,20 @@ module floo_axi_dw_downsizer #(
   localparam SlvPortByteMask = AxiSlvPortStrbWidth - 1;
   localparam MstPortByteMask = AxiMstPortStrbWidth - 1;
 
-  // Size width: 4 bits if Use4BitSize, otherwise 3 bits
+  // Extended size field: 3 bits (standard AXI4) or 4 bits (DataWidth > 1024).
+  // Driven by Use4BitSize from the generated NoC package.
   localparam int unsigned SizeWidth = Use4BitSize ? 4 : 3;
   typedef logic [SizeWidth-1:0] ext_aw_ar_size_t;
+
+  typedef logic [127:0] largest_addr_t;
+
+  function automatic largest_addr_t aligned_addr(largest_addr_t addr, ext_aw_ar_size_t size);
+    return (addr >> size) << size;
+  endfunction
+
+  function automatic logic modifiable(axi_pkg::cache_t cache);
+    return |(cache & axi_pkg::CACHE_MODIFIABLE);
+  endfunction
 
   // Byte-grouped data words
   typedef logic [AxiMstPortStrbWidth-1:0][7:0] mst_data_t;
@@ -603,11 +614,11 @@ module floo_axi_dw_downsizer #(
                   r_req_d.r.user    = mst_resp.r.user         ;
 
                   // Merge response of this beat with prior one according to precedence rules.
-                  r_req_d.r.resp = axi_pkg_ext::resp_precedence(r_req_q.r.resp, mst_resp.r.resp);
+                  r_req_d.r.resp = axi_pkg::resp_precedence(r_req_q.r.resp, mst_resp.r.resp);
 
                   case (r_req_d.ar.burst)
                     axi_pkg::BURST_INCR: begin
-                      r_req_d.ar.addr = aligned_addr(axi_pkg_ext::largest_addr_t'(r_req_q.ar.addr), r_req_q.ar.size) + (1 << r_req_q.ar.size);
+                      r_req_d.ar.addr = aligned_addr(axi_pkg::largest_addr_t'(r_req_q.ar.addr), r_req_q.ar.size) + (1 << r_req_q.ar.size);
                     end
                     axi_pkg::BURST_FIXED: begin
                       r_req_d.ar.addr = r_req_q.ar.addr;
@@ -627,8 +638,8 @@ module floo_axi_dw_downsizer #(
                     R_INCR_DOWNSIZE, R_SPLIT_INCR_DOWNSIZE: begin
                       // Forward when the burst is finished, or after filling up a word
                       if (r_req_q.burst_len == 0 ||
-                          (aligned_addr(axi_pkg_ext::largest_addr_t'(r_req_d.ar.addr), r_req_q.orig_ar_size) !=
-                           aligned_addr(axi_pkg_ext::largest_addr_t'(r_req_q.ar.addr), r_req_q.orig_ar_size)   )) begin
+                          (aligned_addr(axi_pkg::largest_addr_t'(r_req_d.ar.addr), r_req_q.orig_ar_size) !=
+                           aligned_addr(axi_pkg::largest_addr_t'(r_req_q.ar.addr), r_req_q.orig_ar_size)   )) begin
                         r_req_d.r_valid = 1'b1;
                       end
                     end

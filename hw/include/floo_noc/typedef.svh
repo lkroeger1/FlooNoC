@@ -33,21 +33,21 @@
   } name;
 
 
-//// Custom axI AR/AW channel type with the same fields as the standard AXI channels, but with a fixed size of 4 bits for the `size` field
+//// Custom AXI AR/AW channel type parameterized by size_t (axi_pkg::size_t for 3-bit, logic[3:0] for 4-bit extended)
 
-`define FLOO_WIDE_AXI_TYPEDEF_AW_CHAN_T(aw_chan_t, addr_t, id_t, user_t)  \
+`define FLOO_WIDE_AXI_TYPEDEF_AW_CHAN_T(aw_chan_t, addr_t, id_t, user_t, size_t)  \
   typedef struct packed {                                       \
     id_t              id;                                       \
     addr_t            addr;                                     \
-    axi_pkg_ext::len_t    len;                                      \
-    axi_pkg_ext::size_t        size;                                     \
-    axi_pkg_ext::burst_t  burst;                                    \
+    axi_pkg::len_t    len;                                      \
+    size_t        size;                                     \
+    axi_pkg::burst_t  burst;                                    \
     logic             lock;                                     \
-    axi_pkg_ext::cache_t  cache;                                    \
-    axi_pkg_ext::prot_t   prot;                                     \
-    axi_pkg_ext::qos_t    qos;                                      \
-    axi_pkg_ext::region_t region;                                   \
-    axi_pkg_ext::atop_t   atop;                                     \
+    axi_pkg::cache_t  cache;                                    \
+    axi_pkg::prot_t   prot;                                     \
+    axi_pkg::qos_t    qos;                                      \
+    axi_pkg::region_t region;                                   \
+    axi_pkg::atop_t   atop;                                     \
     user_t            user;                                     \
   } aw_chan_t;
 `define FLOO_WIDE_AXI_TYPEDEF_W_CHAN_T(w_chan_t, data_t, strb_t, user_t)  \
@@ -60,28 +60,28 @@
 `define FLOO_WIDE_AXI_TYPEDEF_B_CHAN_T(b_chan_t, id_t, user_t)  \
   typedef struct packed {                             \
     id_t            id;                               \
-    axi_pkg_ext::resp_t resp;                             \
+    axi_pkg::resp_t resp;                             \
     user_t          user;                             \
   } b_chan_t;
-`define FLOO_WIDE_AXI_TYPEDEF_AR_CHAN_T(ar_chan_t, addr_t, id_t, user_t)  \
+`define FLOO_WIDE_AXI_TYPEDEF_AR_CHAN_T(ar_chan_t, addr_t, id_t, user_t, size_t)  \
   typedef struct packed {                                       \
     id_t              id;                                       \
     addr_t            addr;                                     \
-    axi_pkg_ext::len_t    len;                                      \
-    logic [3:0]        size;                                     \
-    axi_pkg_ext::burst_t  burst;                                    \
+    axi_pkg::len_t    len;                                      \
+    size_t        size;                                     \
+    axi_pkg::burst_t  burst;                                    \
     logic             lock;                                     \
-    axi_pkg_ext::cache_t  cache;                                    \
-    axi_pkg_ext::prot_t   prot;                                     \
-    axi_pkg_ext::qos_t    qos;                                      \
-    axi_pkg_ext::region_t region;                                   \
+    axi_pkg::cache_t  cache;                                    \
+    axi_pkg::prot_t   prot;                                     \
+    axi_pkg::qos_t    qos;                                      \
+    axi_pkg::region_t region;                                   \
     user_t            user;                                     \
   } ar_chan_t;
 `define FLOO_WIDE_AXI_TYPEDEF_R_CHAN_T(r_chan_t, data_t, id_t, user_t)  \
   typedef struct packed {                                     \
     id_t            id;                                       \
     data_t          data;                                     \
-    axi_pkg_ext::resp_t resp;                                     \
+    axi_pkg::resp_t resp;                                     \
     logic           last;                                     \
     user_t          user;                                     \
   } r_chan_t;
@@ -120,11 +120,11 @@
 //
 // This defines `axi_req_t` and `axi_rsp_t` request/response structs as well as `axi_aw_chan_t`,
 // `axi_w_chan_t`, `axi_b_chan_t`, `axi_ar_chan_t`, and `axi_r_chan_t` channel structs.
-`define FLOO_WIDE_AXI_TYPEDEF_ALL_CT(__name, __req, __rsp, __addr_t, __id_t, __data_t, __strb_t, __user_t) \
-  `FLOO_WIDE_AXI_TYPEDEF_AW_CHAN_T(__name``_aw_chan_t, __addr_t, __id_t, __user_t)                         \
+`define FLOO_WIDE_AXI_TYPEDEF_ALL_CT(__name, __req, __rsp, __addr_t, __id_t, __data_t, __strb_t, __user_t, __size_t) \
+  `FLOO_WIDE_AXI_TYPEDEF_AW_CHAN_T(__name``_aw_chan_t, __addr_t, __id_t, __user_t, __size_t)                         \
   `FLOO_WIDE_AXI_TYPEDEF_W_CHAN_T(__name``_w_chan_t, __data_t, __strb_t, __user_t)                         \
   `FLOO_WIDE_AXI_TYPEDEF_B_CHAN_T(__name``_b_chan_t, __id_t, __user_t)                                     \
-  `FLOO_WIDE_AXI_TYPEDEF_AR_CHAN_T(__name``_ar_chan_t, __addr_t, __id_t, __user_t)                         \
+  `FLOO_WIDE_AXI_TYPEDEF_AR_CHAN_T(__name``_ar_chan_t, __addr_t, __id_t, __user_t, __size_t)                         \
   `FLOO_WIDE_AXI_TYPEDEF_R_CHAN_T(__name``_r_chan_t, __data_t, __id_t, __user_t)                           \
   `FLOO_WIDE_AXI_TYPEDEF_REQ_T(__req, __name``_aw_chan_t, __name``_w_chan_t, __name``_ar_chan_t)           \
   `FLOO_WIDE_AXI_TYPEDEF_RESP_T(__rsp, __name``_b_chan_t, __name``_r_chan_t)

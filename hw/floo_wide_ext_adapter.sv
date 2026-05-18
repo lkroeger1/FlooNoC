@@ -46,7 +46,9 @@ module floo_wide_ext_adapter
   /// NoC subordinate-path request type  (← chimney axi_wide_out_req_o, OutIdWidth).
   parameter type axi_wide_out_req_t = logic,
   /// NoC subordinate-path response type (→ chimney axi_wide_out_rsp_i).
-  parameter type axi_wide_out_rsp_t = logic
+  parameter type axi_wide_out_rsp_t = logic,
+
+  parameter bit Use4BitSize = 1'b0
 ) (
   input  logic clk_i,
   input  logic rst_ni,
@@ -78,7 +80,7 @@ module floo_wide_ext_adapter
   localparam int unsigned AxiMaxReads = 8;
 
   // Set if 4 bit size field is used
-  localparam bit Use4BitSize = 1;
+  typedef logic [(Use4BitSize ? 3 : 2):0] axi_wide_ext_size_t;
 
   // ---------------------------------------------------------------------------
   // Internal type declarations
@@ -99,11 +101,13 @@ module floo_wide_ext_adapter
   typedef logic [AxiCfgW.DataWidth-1:0]        axi_mgr_mst_data_t;
   typedef logic [AxiCfgW.DataWidth/8-1:0]      axi_mgr_mst_strb_t;
 
-  `FLOO_WIDE_AXI_TYPEDEF_AW_CHAN_T(axi_mgr_aw_t, axi_addr_t, axi_mgr_id_t, axi_ext_user_t)
+
+
+  `FLOO_WIDE_AXI_TYPEDEF_AW_CHAN_T(axi_mgr_aw_t, axi_addr_t, axi_mgr_id_t, axi_ext_user_t, axi_wide_ext_size_t)
   `AXI_TYPEDEF_W_CHAN_T (axi_mgr_slv_w_t, axi_mgr_slv_data_t, axi_mgr_slv_strb_t, axi_ext_user_t)
   `AXI_TYPEDEF_W_CHAN_T (axi_mgr_mst_w_t, axi_mgr_mst_data_t, axi_mgr_mst_strb_t, axi_ext_user_t)
   `AXI_TYPEDEF_B_CHAN_T (axi_mgr_b_t,  axi_mgr_id_t, axi_ext_user_t)
-  `FLOO_WIDE_AXI_TYPEDEF_AR_CHAN_T(axi_mgr_ar_t, axi_addr_t, axi_mgr_id_t, axi_ext_user_t)
+  `FLOO_WIDE_AXI_TYPEDEF_AR_CHAN_T(axi_mgr_ar_t, axi_addr_t, axi_mgr_id_t, axi_ext_user_t, axi_wide_ext_size_t)
   `AXI_TYPEDEF_R_CHAN_T (axi_mgr_slv_r_t, axi_mgr_slv_data_t, axi_mgr_id_t, axi_ext_user_t)
   `AXI_TYPEDEF_R_CHAN_T (axi_mgr_mst_r_t, axi_mgr_mst_data_t, axi_mgr_id_t, axi_ext_user_t)
 
@@ -119,11 +123,11 @@ module floo_wide_ext_adapter
   typedef logic [AxiCfgWExt.DataWidth-1:0]     axi_sbr_mst_data_t;
   typedef logic [AxiCfgWExt.DataWidth/8-1:0]   axi_sbr_mst_strb_t;
 
-  `FLOO_WIDE_AXI_TYPEDEF_AW_CHAN_T(axi_sbr_aw_t, axi_addr_t, axi_sbr_id_t, axi_ext_user_t)
+  `FLOO_WIDE_AXI_TYPEDEF_AW_CHAN_T(axi_sbr_aw_t, axi_addr_t, axi_sbr_id_t, axi_ext_user_t, axi_wide_ext_size_t)
   `AXI_TYPEDEF_W_CHAN_T (axi_sbr_slv_w_t, axi_sbr_slv_data_t, axi_sbr_slv_strb_t, axi_ext_user_t)
   `AXI_TYPEDEF_W_CHAN_T (axi_sbr_mst_w_t, axi_sbr_mst_data_t, axi_sbr_mst_strb_t, axi_ext_user_t)
   `AXI_TYPEDEF_B_CHAN_T (axi_sbr_b_t,  axi_sbr_id_t, axi_ext_user_t)
-  `FLOO_WIDE_AXI_TYPEDEF_AR_CHAN_T(axi_sbr_ar_t, axi_addr_t, axi_sbr_id_t, axi_ext_user_t)
+  `FLOO_WIDE_AXI_TYPEDEF_AR_CHAN_T(axi_sbr_ar_t, axi_addr_t, axi_sbr_id_t, axi_ext_user_t, axi_wide_ext_size_t)
   `AXI_TYPEDEF_R_CHAN_T (axi_sbr_slv_r_t, axi_sbr_slv_data_t, axi_sbr_id_t, axi_ext_user_t)
   `AXI_TYPEDEF_R_CHAN_T (axi_sbr_mst_r_t, axi_sbr_mst_data_t, axi_sbr_id_t, axi_ext_user_t)
 
@@ -304,7 +308,7 @@ module floo_wide_ext_adapter
     .axi_slv_resp_t       ( axi_mgr_slv_resp_t     ),
     .axi_mst_req_t        ( axi_mgr_mst_req_t      ),
     .axi_mst_resp_t       ( axi_mgr_mst_resp_t     ),
-    .Use4BitSize          ( Use4BitSize            )
+    .Use4BitSize          (Use4BitSize            )
   ) i_mgr_dw_converter (
     .clk_i,
     .rst_ni,

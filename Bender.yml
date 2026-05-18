@@ -26,7 +26,6 @@ export_include_dirs:
 
 sources:
   # Level 0
-  - hw/axi_pkg_ext.sv
   - hw/floo_pkg.sv
   # When the `wide_axi` Bender target is set (i.e. NoC link width > 1024 bits),
   # compile axi_pkg_wide.sv which re-declares `package axi_pkg` with a 4-bit size

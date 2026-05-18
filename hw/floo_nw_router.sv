@@ -61,7 +61,9 @@ module floo_nw_router
   parameter type red_wide_rsp_t                     = logic,
   /// Offload reduction narrow interface
   parameter type red_narrow_req_t                   = logic,
-  parameter type red_narrow_rsp_t                   = logic
+  parameter type red_narrow_rsp_t                   = logic,
+
+  parameter bit Use4BitSize = 1'b0
 ) (
   input  logic   clk_i,
   input  logic   rst_ni,
@@ -100,11 +102,14 @@ module floo_nw_router
   typedef logic [AxiCfgW.DataWidth-1:0] axi_wide_data_t;
   typedef logic [AxiCfgW.DataWidth/8-1:0] axi_wide_strb_t;
 
+
+  typedef logic [Use4BitSize ? 3 : 2:0] axi_wide_ext_size_t;
+
   // (Re-) definitons of `axi_in` and `floo` types, for transport
   `AXI_TYPEDEF_ALL_CT(axi_narrow, axi_narrow_req_t, axi_narrow_rsp_t, axi_addr_t,
       axi_narrow_in_id_t, axi_narrow_data_t, axi_narrow_strb_t, axi_narrow_user_t)
   `FLOO_WIDE_AXI_TYPEDEF_ALL_CT(axi_wide, axi_wide_req_t, axi_wide_rsp_t, axi_addr_t,
-      axi_wide_in_id_t, axi_wide_data_t, axi_wide_strb_t, axi_wide_user_t)
+      axi_wide_in_id_t, axi_wide_data_t, axi_wide_strb_t, axi_wide_user_t, axi_wide_ext_size_t)
   `FLOO_TYPEDEF_NW_CHAN_ALL(axi, req, rsp, wide, axi_narrow, axi_wide, AxiCfgN, AxiCfgW, hdr_t)
 
   // Convert user frontend ops into NoC backend

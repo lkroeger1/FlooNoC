@@ -217,7 +217,8 @@ module floo_nw_join #(
     .slv_req_t                ( axi_wide_req_t ),
     .slv_resp_t               ( axi_wide_rsp_t ),
     .mst_req_t                ( axi_wide_iw_conv_req_t ),
-    .mst_resp_t               ( axi_wide_iw_conv_rsp_t )
+    .mst_resp_t               ( axi_wide_iw_conv_rsp_t ),
+    .Use4BitSize              ( Use4BitSize )
   ) i_floo_axi_wide_iw_converter (
     .clk_i,
     .rst_ni,

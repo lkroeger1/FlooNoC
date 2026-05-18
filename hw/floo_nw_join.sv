@@ -288,7 +288,8 @@ module floo_nw_join #(
     .axi_mst_req_t       ( axi_narrow_dw_conv_req_t ),
     .axi_mst_resp_t      ( axi_narrow_dw_conv_rsp_t ),
     .axi_slv_req_t       ( axi_narrow_iw_conv_inter_req_t ),
-    .axi_slv_resp_t      ( axi_narrow_iw_conv_inter_rsp_t )
+    .axi_slv_resp_t      ( axi_narrow_iw_conv_inter_rsp_t ),
+    .Use4BitSize         ( Use4BitSize )
   ) i_floo_axi_narrow_dw_converter (
     .clk_i,
     .rst_ni,

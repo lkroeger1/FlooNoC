@@ -351,6 +351,22 @@ package floo_pkg;
     CutRsp: 1'b0
   };
 
+    /// The default configuration for the network interface
+  localparam chimney_cfg_t ChimneyMemTileInterleaveCfg = '{
+    EnSbrPort: 1'b1,
+    EnMgrPort: 1'b1,
+    MaxTxns: 32,
+    MaxUniqueIds: 32,
+    MaxTxnsPerId: 32,
+    BRoBType: NoRoB,
+    BRoBSize: 0,
+    RRoBType: NoRoB,
+    RRoBSize: 0,
+    CutAx: 1'b0,
+    CutOup: 1'b0,
+    CutRsp: 1'b0
+  };
+
   /// The default configuration for routing
   localparam route_cfg_t RouteDefaultCfg = '{
     RouteAlgo: XYRouting,

@@ -46,7 +46,8 @@ module floo_meta_buffer #(
   parameter type id_t   = logic,
   /// SAM Index type to support multicast info
   parameter type sam_idx_t   = id_t,
-  parameter type mask_sel_t  = logic
+  parameter type mask_sel_t  = logic,
+  parameter bit UseInterleaving = 1'b0
 ) (
   input  logic clk_i,
   input  logic rst_ni,
@@ -64,10 +65,13 @@ module floo_meta_buffer #(
 
   // AXI parameters
   localparam int unsigned IdMinWidth = InIdWidth > OutIdWidth ? OutIdWidth : InIdWidth;
+  localparam int unsigned IdWidthInterleave = UseInterleaving ? OutIdWidth : IdMinWidth;
+
   typedef logic [InIdWidth-1:0] id_in_t;
   typedef logic [OutIdWidth-1:0] id_out_t;
   typedef logic [IdMinWidth-1:0] id_min_t;
 
+  typedef logic [IdWidthInterleave-1:0] id_interleave_t;
   // Collective operations parameters
   localparam bit EnCollective = floo_pkg::en_collective(RouteCfg.CollectiveCfg.OpCfg);
 
@@ -130,28 +134,48 @@ module floo_meta_buffer #(
 
     logic b_oup_gnt, b_oup_data_valid;
     logic r_oup_gnt, r_oup_data_valid;
+    id_interleave_t ar_no_atop_inp_id, aw_no_atop_inp_id;
+    id_out_t linear_source_id_ar, linear_source_id_aw;
 
     id_out_t no_atop_aw_req_id_in, no_atop_ar_req_id_in;
 
     // Non-atomic transaction IDs are assigned to the range [MaxAtomicTxns, 2**OutIdWidth-1),
     // Therefore `MaxAtomicTxns` is added/subtracted to/from the ID to get the original ID
-    assign no_atop_aw_req_id = id_min_t'(MaxAtomicTxns) + id_min_t'(axi_req_i.aw.id);
-    assign no_atop_ar_req_id = id_min_t'(MaxAtomicTxns) + id_min_t'(axi_req_i.ar.id);
-    assign no_atop_aw_req_id_in = axi_rsp_i.b.id - id_min_t'(MaxAtomicTxns);
-    assign no_atop_ar_req_id_in = axi_rsp_i.r.id - id_min_t'(MaxAtomicTxns);
-    `ASSERT_INIT(TooFewIdBits2, MaxAtomicTxns + id_min_t'('1) < 2**OutIdWidth)
+    if (!UseInterleaving) begin : gen_no_interleaving
+      assign no_atop_aw_req_id = id_min_t'(MaxAtomicTxns) + id_min_t'(axi_req_i.aw.id);
+      assign no_atop_ar_req_id = id_min_t'(MaxAtomicTxns) + id_min_t'(axi_req_i.ar.id);
+      assign no_atop_aw_req_id_in = axi_rsp_i.b.id - id_min_t'(MaxAtomicTxns);
+      assign no_atop_ar_req_id_in = axi_rsp_i.r.id - id_min_t'(MaxAtomicTxns);
+      assign ar_no_atop_inp_id = id_interleave_t'(axi_req_i.ar.id);
+      assign aw_no_atop_inp_id = id_interleave_t'(axi_req_i.aw.id);
+      
+      `ASSERT_INIT(TooFewIdBits2, MaxAtomicTxns + id_min_t'('1) < 2**OutIdWidth)
+    end else begin : gen_interleaving
+      // use the src id as the AR/AW ID
 
+      assign linear_source_id_ar = (id_out_t'(ar_buf_i.hdr.src_id.x) - 4'd4) * 4 +
+                                   {2'b0, ar_buf_i.hdr.src_id.y};
+      assign linear_source_id_aw = (id_out_t'(aw_buf_i.hdr.src_id.x) - 4'd4) * 4 +
+                                   {2'b0, aw_buf_i.hdr.src_id.y};
+      assign no_atop_aw_req_id = id_interleave_t'(MaxAtomicTxns) + linear_source_id_aw;
+      assign no_atop_ar_req_id = id_interleave_t'(MaxAtomicTxns) + linear_source_id_ar;
+      assign no_atop_aw_req_id_in = axi_rsp_i.b.id - id_interleave_t'(MaxAtomicTxns);
+      assign no_atop_ar_req_id_in = axi_rsp_i.r.id - id_interleave_t'(MaxAtomicTxns);
+      assign ar_no_atop_inp_id = id_interleave_t'(linear_source_id_ar);
+      assign aw_no_atop_inp_id = id_interleave_t'(linear_source_id_aw);
+      `ASSERT_INIT(TooFewIdBits2, MaxAtomicTxns + id_interleave_t'('1) < 2**OutIdWidth)
+    end
     logic aw_no_atop_buf_not_full, ar_no_atop_buf_not_full;
 
     id_queue #(
-      .ID_WIDTH ( IdMinWidth  ),
+      .ID_WIDTH ( IdWidthInterleave ),
       .CAPACITY ( MaxTxns     ),
       .FULL_BW  ( 1'b1        ),
       .data_t   ( buf_t       )
     ) i_aw_no_atop_id_queue (
       .clk_i,
       .rst_ni,
-      .inp_id_i         ( id_min_t'(axi_req_i.aw.id)  ),
+      .inp_id_i         ( aw_no_atop_inp_id              ),
       .inp_data_i       ( aw_buf_i                    ),
       .inp_req_i        ( aw_no_atop_push             ),
       .inp_gnt_o        ( aw_no_atop_buf_not_full     ),
@@ -169,14 +193,14 @@ module floo_meta_buffer #(
     );
 
     id_queue #(
-      .ID_WIDTH ( IdMinWidth  ),
+      .ID_WIDTH ( IdWidthInterleave  ),
       .CAPACITY ( MaxTxns     ),
       .FULL_BW  ( 1'b1        ),
       .data_t   ( buf_t       )
     ) i_ar_no_atop_id_queue (
       .clk_i,
       .rst_ni,
-      .inp_id_i         ( id_min_t'(axi_req_i.ar.id)  ),
+      .inp_id_i         ( ar_no_atop_inp_id              ),
       .inp_data_i       ( ar_buf_i                    ),
       .inp_req_i        ( ar_no_atop_push             ),
       .inp_gnt_o        ( ar_no_atop_buf_not_full     ),

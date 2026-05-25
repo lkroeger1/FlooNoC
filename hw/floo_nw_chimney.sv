@@ -94,7 +94,10 @@ module floo_nw_chimney
   /// Struct for the wide user field in AXI
   parameter type user_wide_struct_t                     = logic,
   // Extended AXI size field
-  parameter bit Use4BitSize = 1'b0
+  parameter bit Use4BitSize = 1'b0,
+  // See if we need to use Interleaving (set the ar.id to the source id)
+  parameter bit UseInterleaving = 1'b0
+  
 ) (
   input  logic clk_i,
   input  logic rst_ni,
@@ -1739,11 +1742,27 @@ module floo_nw_chimney
   end
 
   if (ChimneyCfgW.EnSbrPort) begin : gen_wide_mgr_port
-    floo_meta_buffer #(
+    //Here we need to do the following:
+    // set max unique ids to 32 to be able to support all source ids, and set the AR ID to the source id
+    if (UseInterleaving) begin: gen_interleaved_meta_buffer
+
+      // floo_axi_iw_converter #(
+      //   .InIdWidth  ( AxiCfgW.InIdWidth  ),
+      //   .OutIdWidth ( AxiCfgWMemTileInterleave.OutIdWidth )
+      // ) i_axi_iw_converter_interleave (
+      //   .clk_i,
+      //   .rst_ni,
+      //   .test_enable_i,
+      //   .axi_req_in  ( axi_wide_meta_buf_req_in  ),
+      //   .axi_req_out ( axi_wide_meta_buf_req_out )
+      // );
+
+
+      floo_meta_buffer #(
       .InIdWidth      ( AxiCfgW.InIdWidth         ),
       .OutIdWidth     ( AxiCfgW.OutIdWidth        ),
-      .MaxTxns        ( ChimneyCfgW.MaxTxns       ),
-      .MaxUniqueIds   ( ChimneyCfgW.MaxUniqueIds  ),
+      .MaxTxns        ( ChimneyMemTileInterleaveCfg.MaxTxns       ),
+      .MaxUniqueIds   ( ChimneyMemTileInterleaveCfg.MaxUniqueIds  ),
       .AtopSupport    ( 1'b0                      ),
       .MaxAtomicTxns  ( '0                        ),
       .Sam            ( Sam                       ),
@@ -1757,7 +1776,8 @@ module floo_nw_chimney
       .sam_rule_t     ( sam_rule_t               ),
       .id_t           ( id_t                      ),
       .sam_idx_t      ( sam_idx_t                 ),
-      .mask_sel_t     ( mask_sel_t                )
+      .mask_sel_t     ( mask_sel_t                ),
+      .UseInterleaving ( 1'b1                      )
     ) i_wide_meta_buffer (
       .clk_i,
       .rst_ni,
@@ -1772,6 +1792,41 @@ module floo_nw_chimney
       .r_buf_o    ( wide_ar_buf_hdr_out       ),
       .b_buf_o    ( wide_aw_buf_hdr_out       )
     );
+    end else begin: gen_non_interleaved_meta_buffer
+      floo_meta_buffer #(
+        .InIdWidth      ( AxiCfgW.InIdWidth         ),
+        .OutIdWidth     ( AxiCfgW.OutIdWidth        ),
+        .MaxTxns        ( ChimneyCfgW.MaxTxns       ),
+        .MaxUniqueIds   ( ChimneyCfgW.MaxUniqueIds  ),
+        .AtopSupport    ( 1'b0                      ),
+        .MaxAtomicTxns  ( '0                        ),
+        .Sam            ( Sam                       ),
+        .buf_t          ( wide_meta_buf_t           ),
+        .axi_in_req_t   ( axi_wide_req_t            ),
+        .axi_in_rsp_t   ( axi_wide_rsp_t            ),
+        .axi_out_req_t  ( axi_wide_out_req_t        ),
+        .axi_out_rsp_t  ( axi_wide_out_rsp_t        ),
+        .RouteCfg       ( RouteCfg                  ),
+        .addr_t         ( axi_addr_t                ),
+        .sam_rule_t     ( sam_rule_t               ),
+        .id_t           ( id_t                      ),
+        .sam_idx_t      ( sam_idx_t                 ),
+        .mask_sel_t     ( mask_sel_t                )
+      ) i_wide_meta_buffer (
+        .clk_i,
+        .rst_ni,
+        .test_enable_i,
+        .id_i       ( id_i       ),
+        .axi_req_i  ( axi_wide_meta_buf_req_in  ),
+        .axi_rsp_o  ( axi_wide_meta_buf_rsp_out ),
+        .axi_req_o  ( axi_wide_meta_buf_req_out ),
+        .axi_rsp_i  ( axi_wide_meta_buf_rsp_in  ),
+        .aw_buf_i   ( wide_aw_buf_hdr_in        ),
+        .ar_buf_i   ( wide_ar_buf_hdr_in        ),
+        .r_buf_o    ( wide_ar_buf_hdr_out       ),
+        .b_buf_o    ( wide_aw_buf_hdr_out       )
+      );
+    end
   end else begin : gen_no_wide_mgr_port
     axi_err_slv #(
       .AxiIdWidth ( AxiCfgW.InIdWidth ),

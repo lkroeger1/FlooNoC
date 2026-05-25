@@ -744,6 +744,13 @@ class Network(BaseModel):  # pylint: disable=too-many-public-methods
             string += AXI4.render_cfg("AxiCfgN", narrow_in_prot, narrow_out_prot)
             string += AXI4.render_cfg("AxiCfgW", wide_in_prot, wide_out_prot)
 
+            # Optional endpoint-specific wide output configuration used by
+            # mem tiles when declared in the YAML protocols list.
+            wide_out_mem_tile_prot = next((prot for prot in self.protocols
+                if prot.type == "wide" and prot.name == "wide_out_mem_tile"), None)
+            if wide_out_mem_tile_prot is not None:
+                string += AXI4.render_cfg("AxiCfgWMemTile", wide_in_prot, wide_out_mem_tile_prot)
+
             vc_num, phy_num = {
                 WideRwDecouple.PHYS: (2, 2),
                 WideRwDecouple.VC:   (2, 1),

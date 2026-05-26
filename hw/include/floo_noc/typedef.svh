@@ -57,6 +57,17 @@
     logic  last;                                                \
     user_t user;                                                \
   } w_chan_t;
+
+`define FLOO_WIDE_AXI_TYPEDEF_MEMTILE_W_CHAN_T(w_chan_t, data_t, strb_t, user_t, memtile_id_t)  \
+  typedef struct packed {                                       \
+    data_t data;                                                \
+    strb_t strb;                                                \
+    logic  last;                                                \
+    user_t user;                                                \
+    memtile_id_t memtile_id;                                     \
+} w_chan_t;
+
+
 `define FLOO_WIDE_AXI_TYPEDEF_B_CHAN_T(b_chan_t, id_t, user_t)  \
   typedef struct packed {                             \
     id_t            id;                               \
@@ -123,6 +134,16 @@
 `define FLOO_WIDE_AXI_TYPEDEF_ALL_CT(__name, __req, __rsp, __addr_t, __id_t, __data_t, __strb_t, __user_t, __size_t) \
   `FLOO_WIDE_AXI_TYPEDEF_AW_CHAN_T(__name``_aw_chan_t, __addr_t, __id_t, __user_t, __size_t)                         \
   `FLOO_WIDE_AXI_TYPEDEF_W_CHAN_T(__name``_w_chan_t, __data_t, __strb_t, __user_t)                         \
+  `FLOO_WIDE_AXI_TYPEDEF_B_CHAN_T(__name``_b_chan_t, __id_t, __user_t)                                     \
+  `FLOO_WIDE_AXI_TYPEDEF_AR_CHAN_T(__name``_ar_chan_t, __addr_t, __id_t, __user_t, __size_t)                         \
+  `FLOO_WIDE_AXI_TYPEDEF_R_CHAN_T(__name``_r_chan_t, __data_t, __id_t, __user_t)                           \
+  `FLOO_WIDE_AXI_TYPEDEF_REQ_T(__req, __name``_aw_chan_t, __name``_w_chan_t, __name``_ar_chan_t)           \
+  `FLOO_WIDE_AXI_TYPEDEF_RESP_T(__rsp, __name``_b_chan_t, __name``_r_chan_t)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+`define FLOO_WIDE_AXI_MEMTILE_TYPEDEF_ALL_CT(__name, __req, __rsp, __addr_t, __id_t, __data_t, __strb_t, __user_t, __size_t) \
+  `FLOO_WIDE_AXI_TYPEDEF_AW_CHAN_T(__name``_aw_chan_t, __addr_t, __id_t, __user_t, __size_t)                         \
+  `FLOO_WIDE_AXI_TYPEDEF_MEMTILE_W_CHAN_T(__name``_w_chan_t, __data_t, __strb_t, __user_t, __id_t)                         \
   `FLOO_WIDE_AXI_TYPEDEF_B_CHAN_T(__name``_b_chan_t, __id_t, __user_t)                                     \
   `FLOO_WIDE_AXI_TYPEDEF_AR_CHAN_T(__name``_ar_chan_t, __addr_t, __id_t, __user_t, __size_t)                         \
   `FLOO_WIDE_AXI_TYPEDEF_R_CHAN_T(__name``_r_chan_t, __data_t, __id_t, __user_t)                           \

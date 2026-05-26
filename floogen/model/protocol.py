@@ -62,6 +62,7 @@ class AXI4(ProtocolDesc):
     def render_typedefs(self, prefix="", ignored_user_fields=[]) -> str:
         """Render the typedefs of the protocol."""
         name_t = self.type_name() if prefix == "" else f"{prefix}_{self.type_name()}"
+        print(f"Rendering typedefs for protocol '{self.name}' with type name '{name_t}'")
         string = sv_typedef(name_t + "_addr_t", array_size=self.addr_width)
         string += sv_typedef(name_t + "_data_t", array_size=self.data_width)
         string += sv_typedef(name_t + "_strb_t", array_size=self.data_width // 8)

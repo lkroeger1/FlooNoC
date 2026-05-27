@@ -67,6 +67,8 @@ module floo_nw_join #(
   parameter int unsigned AxiWideMstPortMaxTxnsPerId   = AxiWideMaxTxns,
   /// Parameter to increase the size bit field of axi to 4 bit
   parameter bit Use4BitSize                        = 1'b0,
+
+  parameter bit UseUserIDW              = 1'b0,     
   /// Attach a Atop RISC-V adapter in the end to resolve atomic operations
   parameter bit EnAtopAdapter                         = 1'b1,
   /// Use user signals for the ATOP adapter

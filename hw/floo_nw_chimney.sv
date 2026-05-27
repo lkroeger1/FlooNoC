@@ -96,8 +96,7 @@ module floo_nw_chimney
   // Extended AXI size field
   parameter bit Use4BitSize = 1'b0,
   // See if we need to use Interleaving (set the ar.id to the source id)
-  parameter bit UseInterleaving = 1'b0,
-  parameter int WideOutUserWidth = 1
+  parameter bit UseInterleaving = 1'b0
   
 ) (
   input  logic clk_i,
@@ -143,9 +142,6 @@ module floo_nw_chimney
   typedef logic [AxiCfgW.DataWidth-1:0] axi_wide_data_t;
   typedef logic [AxiCfgW.DataWidth/8-1:0] axi_wide_strb_t;
 
-  localparam int WideOutUserWidthUsed = UseInterleaving ? WideOutUserWidth : AxiCfgW.UserWidth;
-  typedef logic [WideOutUserWidthUsed-1:0] axi_wide_widened_user_t;
-
   // // (Re-) definitons of `axi_in` and `floo` types, for transport
   // if(Use4BitSize) begin : gen_use_4bit_size
   //   `AXI_TYPEDEF_ALL_CT(axi_narrow, axi_narrow_req_t, axi_narrow_rsp_t, axi_addr_t,
@@ -178,10 +174,6 @@ module floo_nw_chimney
   `AXI_TYPEDEF_AW_CHAN_T(axi_narrow_out_aw_chan_t, axi_addr_t,
                         axi_narrow_out_id_t, axi_narrow_user_t)
   `FLOO_TYPEDEF_NW_CHAN_ALL(axi, req, rsp, wide, axi_narrow, axi_wide, AxiCfgN, AxiCfgW, hdr_t)
-
-
-  `FLOO_WIDE_AXI_TYPEDEF_ALL_CT(axi_wide_widened_user, axi_wide_widened_user_req_t, axi_wide_widened_user_rsp_t, axi_addr_t,
-      axi_wide_in_id_t, axi_wide_data_t, axi_wide_strb_t, axi_wide_widened_user_t, axi_wide_ext_size_t)
 
 
   // Type of the mask encoded in the user field.
@@ -268,19 +260,12 @@ module floo_nw_chimney
   floo_wide_generic_flit_t  floo_wide_unpack_generic_rd;
   floo_wide_generic_flit_t  floo_wide_unpack_generic_wr;
 
-
-  //special types for the w beats to carry its axi ID in the user field
-
-  axi_wide_widened_user_w_chan_t axi_wide_unpack_w_widened_user;
-
   // Meta Buffers
   axi_narrow_req_t axi_narrow_meta_buf_req_in;
   axi_narrow_rsp_t axi_narrow_meta_buf_rsp_out;
   axi_narrow_out_req_t axi_narrow_meta_buf_req_out;
   axi_narrow_out_rsp_t axi_narrow_meta_buf_rsp_in;
-  axi_wide_req_t   axi_wide_meta_buf_req_in_base;
-  axi_wide_widened_user_req_t   axi_wide_meta_buf_req_in;
-  axi_wide_widened_user_rsp_t   axi_wide_meta_buf_rsp_out_wide;
+  axi_wide_req_t   axi_wide_meta_buf_req_in;
   axi_wide_rsp_t   axi_wide_meta_buf_rsp_out;
   axi_wide_out_req_t  axi_wide_meta_buf_req_out;
   axi_wide_out_rsp_t  axi_wide_meta_buf_rsp_in;
@@ -1538,8 +1523,6 @@ module floo_nw_chimney
   logic b_sel_atop, r_sel_atop;
   logic b_rob_pending_q, r_rob_pending_q;
 
-  logic [4:0] linear_source_id_w_wr, linear_source_id_w_rd;
-
   assign is_atop_b_rsp = AtopSupport && axi_valid_in[NarrowB] &&
                          floo_rsp_unpack_generic.hdr.atop;
   assign is_atop_r_rsp = AtopSupport && axi_valid_in[NarrowR] &&
@@ -1556,25 +1539,6 @@ module floo_nw_chimney
                                                    floo_wide_in_wr_q.wide_aw.payload;
   assign axi_wide_unpack_w    = (!EnDecoupledRW) ? floo_wide_in_q.wide_w.payload :
                                                    floo_wide_in_wr_q.wide_w.payload;
-  if (!UseInterleaving) begin: gen_w_no_interleaving
-    assign axi_wide_unpack_w_widened_user = axi_wide_widened_user_w_chan_t'(axi_wide_unpack_w);
-  end else begin: gen_w_interleaving
-    // In interleaving mode, we need to add the src_id (matches the axi id the floo meta buffer assigns aw), in order to identify which AW the W returned by the memory belongs to
-    assign linear_source_id_w_wr = (!EnDecoupledRW) ?
-      ((axi_wide_widened_user_t'(floo_wide_in_q.wide_w.hdr.src_id.x) - axi_wide_widened_user_t'(4'd4)) * axi_wide_widened_user_t'(4) +
-       axi_wide_widened_user_t'({2'b0, floo_wide_in_q.wide_w.hdr.src_id.y})) :
-      ((axi_wide_widened_user_t'(floo_wide_in_wr_q.wide_w.hdr.src_id.x) - axi_wide_widened_user_t'(4'd4)) * axi_wide_widened_user_t'(4) +
-       axi_wide_widened_user_t'({2'b0, floo_wide_in_wr_q.wide_w.hdr.src_id.y}));
-    assign axi_wide_unpack_w_widened_user = '{
-      data: (!EnDecoupledRW) ? floo_wide_in_q.wide_w.payload.data :
-                              floo_wide_in_wr_q.wide_w.payload.data,
-      strb: (!EnDecoupledRW) ? floo_wide_in_q.wide_w.payload.strb :
-                              floo_wide_in_wr_q.wide_w.payload.strb,
-      last: (!EnDecoupledRW) ? floo_wide_in_q.wide_w.payload.last :
-                              floo_wide_in_wr_q.wide_w.payload.last,
-      user: linear_source_id_w_wr
-    };
-  end
   assign axi_wide_unpack_ar   = floo_req_in.wide_ar.payload;
   assign axi_wide_unpack_r    = (!EnDecoupledRW) ? floo_wide_in_q.wide_r.payload :
                                                    floo_wide_in_rd_q.wide_r.payload;
@@ -1667,7 +1631,7 @@ module floo_nw_chimney
     r_ready   : floo_rsp_arb_gnt_out[NarrowR]
   };
 
-  assign axi_wide_meta_buf_req_in_base ='{
+  assign axi_wide_meta_buf_req_in ='{
     aw        : axi_wide_unpack_aw,
     aw_valid  : axi_valid_in[WideAw],
     w         : axi_wide_unpack_w,
@@ -1677,21 +1641,6 @@ module floo_nw_chimney
     ar_valid  : axi_valid_in[WideAr],
     r_ready   : floo_wide_arb_gnt_out[WideR]
   };
-
-  // Single conversion point: copy normal request into widened-user request,
-  // then override W with interleaving-tagged user payload.
-  always_comb begin
-    `AXI_SET_REQ_STRUCT(axi_wide_meta_buf_req_in, axi_wide_meta_buf_req_in_base)
-    axi_wide_meta_buf_req_in.w = axi_wide_unpack_w_widened_user;
-  end
-
-  // Down-convert response user width back to the regular wide response type.
-  always_comb begin
-    `AXI_SET_RESP_STRUCT(axi_wide_meta_buf_rsp_out, axi_wide_meta_buf_rsp_out_wide)
-  end
-
-
-  
 
   assign narrow_b_rob_valid_in      = axi_valid_in[NarrowB] && !is_atop_b_rsp;
   assign narrow_r_rob_valid_in      = axi_valid_in[NarrowR] && !is_atop_r_rsp;
@@ -1818,8 +1767,8 @@ module floo_nw_chimney
       .MaxAtomicTxns  ( '0                        ),
       .Sam            ( Sam                       ),
       .buf_t          ( wide_meta_buf_t           ),
-      .axi_in_req_t   ( axi_wide_widened_user_req_t ),
-      .axi_in_rsp_t   ( axi_wide_widened_user_rsp_t  ),
+      .axi_in_req_t   ( axi_wide_req_t            ),
+      .axi_in_rsp_t   ( axi_wide_rsp_t            ),
       .axi_out_req_t  ( axi_wide_out_req_t        ),
       .axi_out_rsp_t  ( axi_wide_out_rsp_t        ),
       .RouteCfg       ( RouteCfg                  ),
@@ -1835,7 +1784,7 @@ module floo_nw_chimney
       .test_enable_i,
       .id_i       ( id_i       ),
       .axi_req_i  ( axi_wide_meta_buf_req_in  ),
-      .axi_rsp_o  ( axi_wide_meta_buf_rsp_out_wide ),
+      .axi_rsp_o  ( axi_wide_meta_buf_rsp_out ),
       .axi_req_o  ( axi_wide_meta_buf_req_out ),
       .axi_rsp_i  ( axi_wide_meta_buf_rsp_in  ),
       .aw_buf_i   ( wide_aw_buf_hdr_in        ),
@@ -1853,8 +1802,8 @@ module floo_nw_chimney
         .MaxAtomicTxns  ( '0                        ),
         .Sam            ( Sam                       ),
         .buf_t          ( wide_meta_buf_t           ),
-        .axi_in_req_t   ( axi_wide_widened_user_req_t ),
-        .axi_in_rsp_t   ( axi_wide_widened_user_rsp_t  ),
+        .axi_in_req_t   ( axi_wide_req_t            ),
+        .axi_in_rsp_t   ( axi_wide_rsp_t            ),
         .axi_out_req_t  ( axi_wide_out_req_t        ),
         .axi_out_rsp_t  ( axi_wide_out_rsp_t        ),
         .RouteCfg       ( RouteCfg                  ),
@@ -1869,7 +1818,7 @@ module floo_nw_chimney
         .test_enable_i,
         .id_i       ( id_i       ),
         .axi_req_i  ( axi_wide_meta_buf_req_in  ),
-        .axi_rsp_o  ( axi_wide_meta_buf_rsp_out_wide ),
+        .axi_rsp_o  ( axi_wide_meta_buf_rsp_out ),
         .axi_req_o  ( axi_wide_meta_buf_req_out ),
         .axi_rsp_i  ( axi_wide_meta_buf_rsp_in  ),
         .aw_buf_i   ( wide_aw_buf_hdr_in        ),
@@ -1882,14 +1831,14 @@ module floo_nw_chimney
     axi_err_slv #(
       .AxiIdWidth ( AxiCfgW.InIdWidth ),
       .ATOPs      ( 1'b1              ),
-      .axi_req_t  ( axi_wide_widened_user_req_t ),
-      .axi_resp_t ( axi_wide_widened_user_rsp_t )
+      .axi_req_t  ( axi_wide_req_t ),
+      .axi_resp_t ( axi_wide_rsp_t )
     ) i_axi_err_slv (
       .clk_i      ( clk_i                     ),
       .rst_ni     ( rst_ni                    ),
       .test_i     ( test_enable_i             ),
       .slv_req_i  ( axi_wide_meta_buf_req_in  ),
-      .slv_resp_o ( axi_wide_meta_buf_rsp_out_wide )
+      .slv_resp_o ( axi_wide_meta_buf_rsp_out )
     );
     assign axi_wide_meta_buf_req_out = '0;
     assign wide_ar_buf_hdr_out = '0;

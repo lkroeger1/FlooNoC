@@ -76,8 +76,8 @@ module floo_wide_ext_adapter
 
   /// Maximum number of outstanding read transactions tracked by the upsizer.
   /// Matches the DMA's wide_trans=32 to avoid stalling the read pipeline.
-  localparam int unsigned AxiMaxReadsDown = 4;
-  localparam int unsigned AxiMaxReadsUp   = 8;
+  localparam int unsigned AxiMaxReadsDown = 2;
+  localparam int unsigned AxiMaxReadsUp   = 2;
 
   // Set if 4 bit size field is used
   typedef logic [(Use4BitSize ? 3 : 2):0] axi_wide_ext_size_t;
